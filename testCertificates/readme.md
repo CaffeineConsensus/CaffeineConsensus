@@ -38,11 +38,13 @@ get the `e`=010001 and `n` DF..0D
 
 # Certificate
 
+Country code: CH
+Company name: CoffeeInc
+
 - Creates a self-signed certificate to act as the company Certificate Authorithy:
 
 openssl req -x509 -newkey rsa:1024 -sha256 -days 3650 -nodes -keyout ca_private.key -out ca_cert.crt
 openssl rsa -in ca_private.key -outform der -pubout -out ca_public.pem
-
 
 
 - Create employee key and request to sign
@@ -50,6 +52,9 @@ openssl req -new -nodes -newkey rsa:1024 -keyout employee_private.key -out emplo
 
 - Sign employee Certificate with CA generated above
 openssl x509 -req -in employee_certification_request.pem -days 3650 -CA ca_cert.crt -CAkey ca_private.key -CAcreateserial -out employee_cert.crt
+
+- create public key
+openssl rsa -in employee_private.key -outform der -pubout -out employee_public.pem
 
 - Outputs certificate in text readable form:
 openssl x509 -in ca_cert.crt -text -noout
