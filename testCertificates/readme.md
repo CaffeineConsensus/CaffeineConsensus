@@ -38,11 +38,20 @@ get the `e`=010001 and `n` DF..0D
 
 # Certificate
 
+- Creates a self-signed certificate to act as the company Certificate Authorithy:
 
-openssl req -x509 -newkey rsa:1024 -sha256 -days 3650 -nodes -keyout CAPrivate.key -out CACertificate.crt
-openssl rsa -in CAPrivate.key -outform der -pubout -out CAPublic.pem
-openssl x509 -in CACertificate.crt -text -noout
+openssl req -x509 -newkey rsa:1024 -sha256 -days 3650 -nodes -keyout ca_private.key -out ca_cert.crt
+openssl rsa -in ca_private.key -outform der -pubout -out ca_public.pem
 
-openssl req -x509 -newkey rsa:1024 -sha256 -days 3650 -nodes -keyout EmployeePrivate.key -out EmployeeCertificate.crt
-openssl rsa -in EmployeePrivate.key -outform der -pubout -out EmployeePublic.pem
-openssl x509 -in EmployeeCertificate.crt -text -noout
+
+
+- Create employee key and request to sign
+openssl req -new -nodes -newkey rsa:1024 -keyout employee_private.key -out employee_certification_request.pem
+
+- Sign employee Certificate with CA generated above
+openssl x509 -req -in employee_certification_request.pem -days 3650 -CA ca_cert.crt -CAkey ca_private.key -CAcreateserial -out employee_cert.crt
+
+- Outputs certificate in text readable form:
+openssl x509 -in ca_cert.crt -text -noout
+openssl x509 -in employee_cert.crt -text -noout
+
