@@ -36,4 +36,13 @@ extract the public n from the public key
 get the `e`=010001 and `n` DF..0D
 
 
+# Certificate
 
+
+openssl req -x509 -newkey rsa:1024 -sha256 -days 3650 -nodes -keyout CAPrivate.key -out CACertificate.crt
+openssl rsa -in CAPrivate.key -outform der -pubout -out CAPublic.pem
+openssl x509 -in CACertificate.crt -text -noout
+
+openssl req -x509 -newkey rsa:1024 -sha256 -days 3650 -nodes -keyout EmployeePrivate.key -out EmployeeCertificate.crt
+openssl rsa -in EmployeePrivate.key -outform der -pubout -out EmployeePublic.pem
+openssl x509 -in EmployeeCertificate.crt -text -noout
