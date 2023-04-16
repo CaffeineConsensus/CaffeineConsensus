@@ -1,6 +1,5 @@
-Employee key is not yet signed by the CA.
 
-# Steps to generate key, sign a message, and extract relevant information (from SolRSAverify)
+# From SolRSAverify: Steps to generate key, sign a message, and extract relevant information 
 > openssl genrsa -out private.pem 1024
 
 > cat private.pem
@@ -36,38 +35,61 @@ extract the public n from the public key
 get the `e`=010001 and `n` DF..0D
 
 
-# Certificate
+# Generate Root CA and Employee Certificate
 
+The company needs a CA, in this example it should be a self-signed, root CA. An employee will create their own keys and get a signed certificate from the root CA.
+
+Use:
 Country code: CH
 Company name: CoffeeInc
 IMPORTANT: set the common name to a unique value. For the CA use CoffeeInc, for the employee use Employee1
 
-- Creates a self-signed certificate to act as the company Certificate Authorithy:
-
+Creates a self-signed certificate to act as the company Certificate Authorithy:
+```
 openssl req -x509 -newkey rsa:1024 -sha256 -days 3650 -nodes -keyout ca_private.key -out ca_cert.crt
 openssl rsa -in ca_private.key -outform der -pubout -out ca_public.pem
+```
 
-- Create employee key and request to sign
+Create employee key and request to sign
+```
 openssl req -new -nodes -newkey rsa:1024 -keyout employee_private.key -out employee_certification_request.pem
+```
 
-- Sign employee Certificate with CA generated above
+Sign employee Certificate with CA generated above
+```
 openssl x509 -req -in employee_certification_request.pem -days 3650 -CA ca_cert.crt -CAkey ca_private.key -CAcreateserial -out employee_cert.crt
+```
 
-- create public key
+create public key
+```
 openssl rsa -in employee_private.key -outform der -pubout -out employee_public.pem
+```
 
-- Outputs certificate in text readable form:
+Outputs certificate in text readable form:
+```
 openssl x509 -in ca_cert.crt -text -noout
 openssl x509 -in employee_cert.crt -text -noout
+```
 
-- Extract public key from certificate
+Extract public key from certificate
+```
 openssl x509 -pubkey -noout -in cert.pem
+```
 
-- Extract modulus (m or n) from certificate
+Extract modulus (m or n) from certificate
+```
 openssl x509 -noout -modulus -in employee_cert.crt 
 openssl x509 -noout -modulus -in ca_cert.crt 
+```
 
-# Certificate employee_cert
+Verify that the employee_cert is signed by the ca_cert
+```
+openssl verify -CAfile ca_cert.crt employee_cert.crt
+```
+
+
+# Certificate example
+```
 Certificate:
     Data:
         Version: 1 (0x0)
@@ -103,14 +125,31 @@ Certificate:
         af:35:46:03:28:bb:d1:bf:44:52:ca:22:7e:54:25:d5:1c:2a:
         34:ef:d2:71:22:9c:89:20:b6:22:5f:26:48:8e:94:79:22:1e:
         fb:72
+```
 
+# MY GOD WHY IS IT DONE THIS WAY
+https://yongbingchen.github.io/blog/2015/04/09/verify-the-signature-of-a-x-dot-509-certificate/
 
-# asdf
+So, the ca signs the data part of the certificate, formally known as TBScertificate, To Be Signed Certificate. However, there is no easy way to extract this TBScertificate with openssl. So you need to do the following:
 
-https://superuser.com/questions/1428012/cant-verify-an-openssl-certificate-against-a-self-signed-openssl-certificate
+```
+openssl x509 -in employee_certificate.crt -inform PEM -out Google.crt -outform DER
+```
+```
+openssl x509 -in employee_cert.crt -inform PEM -out employee_cert_der.crt -outform DER
+```
 
-openssl req -new -newkey rsa:1024 -keyout rootprivkey.pem -out rootreq.pem -config ca_conf.cnf
+One the second line you have hl head length, and l=count
+```
+dd if=employee_cert_der.crt of=employee_cert.tbsCertificate skip=4 bs=1 count=488
+```
+```
+openssl asn1parse -inform der -in employee_cert_der.crt
+```
 
-openssl ca -out rootcrt.pem -days 2652 -keyfile rootprivkey.pem -selfsign -config ca_conf.cnf -extensions ca_ext -in rootreq.pem -sigopt rsa_padding_mode:pkcs1
+And even then, the sha256 of this cert does not match the recovered signature.
 
+```
+openssl sha256 employee_cert.tbsCertificate
+```
 
