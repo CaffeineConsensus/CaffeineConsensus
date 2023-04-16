@@ -40,12 +40,12 @@ get the `e`=010001 and `n` DF..0D
 
 Country code: CH
 Company name: CoffeeInc
+IMPORTANT: set the common name to a unique value. For the CA use CoffeeInc, for the employee use Employee1
 
 - Creates a self-signed certificate to act as the company Certificate Authorithy:
 
 openssl req -x509 -newkey rsa:1024 -sha256 -days 3650 -nodes -keyout ca_private.key -out ca_cert.crt
 openssl rsa -in ca_private.key -outform der -pubout -out ca_public.pem
-
 
 - Create employee key and request to sign
 openssl req -new -nodes -newkey rsa:1024 -keyout employee_private.key -out employee_certification_request.pem
@@ -103,3 +103,14 @@ Certificate:
         af:35:46:03:28:bb:d1:bf:44:52:ca:22:7e:54:25:d5:1c:2a:
         34:ef:d2:71:22:9c:89:20:b6:22:5f:26:48:8e:94:79:22:1e:
         fb:72
+
+
+# asdf
+
+https://superuser.com/questions/1428012/cant-verify-an-openssl-certificate-against-a-self-signed-openssl-certificate
+
+openssl req -new -newkey rsa:1024 -keyout rootprivkey.pem -out rootreq.pem -config ca_conf.cnf
+
+openssl ca -out rootcrt.pem -days 2652 -keyfile rootprivkey.pem -selfsign -config ca_conf.cnf -extensions ca_ext -in rootreq.pem -sigopt rsa_padding_mode:pkcs1
+
+
